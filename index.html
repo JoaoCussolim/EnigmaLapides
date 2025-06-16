@@ -110,6 +110,10 @@
             font-weight: bold;
             padding: 0 5px;
         }
+        
+        .note-item.dragging {
+            opacity: 0.5;
+        }
     </style>
 </head>
 
@@ -217,7 +221,7 @@
                     note: {
                         text: "Saia daqui",
                         color: 'blue',
-                        year: 1964
+                        year: 1965
                     }
                 },
 
@@ -225,7 +229,7 @@
                     x: 250,
                     y: 50,
                     note: {
-                        text: "ele dizia",
+                        text: "Perigo",
                         color: 'red',
                         year: 'N/A'
                     }
@@ -233,7 +237,7 @@
                     x: 50,
                     y: 220,
                     note: {
-                        text: "Por que não",
+                        text: "Por que fez isso",
                         color: 'red',
                         year: 'N/A'
                     }
@@ -249,7 +253,7 @@
                     x: 720,
                     y: 340,
                     note: {
-                        text: "Perigo",
+                        text: "ele dizia",
                         color: 'red',
                         year: 'N/A'
                     }
@@ -269,13 +273,13 @@
                     note: {
                         text: "Corra",
                         color: 'green',
-                        year: 1957
+                        year: 1958
                     }
                 }, {
                     x: 500,
                     y: 320,
                     note: {
-                        text: "Por que não olha",
+                        text: "Por que não",
                         color: 'green',
                         year: 1975
                     }
@@ -285,7 +289,7 @@
                     note: {
                         text: "ele",
                         color: 'green',
-                        year: 1933
+                        year: 1934
                     }
                 },
 
@@ -405,19 +409,46 @@
 
         function renderPhraseArea() {
             phraseArea.innerHTML = '';
+            let dragStartIndex;
+
             collectedNotes.forEach((note, index) => {
                 const noteEl = document.createElement('div');
                 noteEl.className = 'note-item';
                 noteEl.style.borderColor = note.color;
+                noteEl.setAttribute('draggable', 'true');
+                noteEl.setAttribute('data-index', index);
+
                 noteEl.innerHTML = `
-                <div class="note-item-content">
-                    <input type="checkbox" id="note-check-${index}" title="Marcar como verdadeiro">
-                    <label for="note-check-${index}">${note.text}</label>
-                </div>
-                <span class="remove-note-btn" data-index="${index}" title="Remover">✖</span>
-            `;
+            <div class="note-item-content">
+                <input type="checkbox" id="note-check-${index}" title="Marcar como verdadeiro">
+                <label for="note-check-${index}">${note.text}</label>
+            </div>
+            <span class="remove-note-btn" data-index="${index}" title="Remover">✖</span>
+        `;
+
+                noteEl.addEventListener('dragstart', (e) => {
+                    dragStartIndex = index;
+                    e.target.classList.add('dragging');
+                });
+
+                noteEl.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                });
+
+                noteEl.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Necessário para permitir o drop
+                });
+
+                noteEl.addEventListener('drop', (e) => {
+                    const dragEndIndex = index;
+                    const [reorderedItem] = collectedNotes.splice(dragStartIndex, 1);
+                    collectedNotes.splice(dragEndIndex, 0, reorderedItem);
+                    renderPhraseArea();
+                });
+
                 phraseArea.appendChild(noteEl);
             });
+
             document.querySelectorAll('.remove-note-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     collectedNotes.splice(parseInt(e.target.getAttribute('data-index')), 1);
